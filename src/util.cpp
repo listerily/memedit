@@ -1,0 +1,55 @@
+#include <cstdio>
+#include "util.h"
+
+bool is_number(const char* str) {
+    if (!*str)
+        return false;
+    while (*str) {
+        if (*str >= '0' && *str <= '9')
+            str++;
+        else
+            return false;
+    }
+    return true;
+}
+
+void mem_printf(char* dest, unsigned mem) {
+    if (mem == 0)
+        sprintf(dest, "0 B");
+    else if (mem <= 9999)
+        sprintf(dest, "%u K", mem);
+    else if (mem / 1024 <= 9999)
+        sprintf(dest, "%u M", mem / 1024);
+    else if (mem / 1024 / 1024 <= 9999)
+        sprintf(dest, "%u G", mem / 1024 / 1024);
+    else if (mem / 1024 / 1024 / 1024 <= 9999)
+        sprintf(dest, "%u T", mem / 1024 / 1024 / 1024);
+    else
+        sprintf(dest, "INF");
+}
+
+unsigned get_processes_num(task_struct* p) {
+    unsigned n = 0;
+    while (p) {
+        ++n;
+        p = p->next;
+    }
+    return n;
+}
+unsigned get_nearest_process_index(task_struct* p, pid_t pid) {
+    unsigned n = 0;
+    while (p && p->pid <= pid) {
+        ++n;
+        p = p->next;
+    }
+    return n - 1;
+}
+pid_t get_pid_from_index(task_struct* p, unsigned ind) {
+    while (p) {
+        if (ind == 0)
+            return p->pid;
+        --ind;
+        p = p->next;
+    }
+    return 0;
+}
