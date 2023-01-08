@@ -59,9 +59,5 @@ int main() {
     select_process_loop();
     endwin();
     exit(0);
-    auto results = get_vm_maps_data(736);
-    for (auto result : results) {
-        printf("%s %s %lld %lld\n", result.addr_str, result.path_name, result.begin, result.end);
-    }
     return 0;
 }
