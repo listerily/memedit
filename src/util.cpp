@@ -1,7 +1,7 @@
 #include <cstdio>
 #include "util.h"
 
-bool is_number(const char* str) {
+bool is_number(const char *str) {
     if (!*str)
         return false;
     while (*str) {
@@ -13,7 +13,7 @@ bool is_number(const char* str) {
     return true;
 }
 
-void mem_printf(char* dest, unsigned mem) {
+void mem_printf(char *dest, unsigned mem) {
     if (mem == 0)
         sprintf(dest, "0 B");
     else if (mem <= 9999)
@@ -28,7 +28,7 @@ void mem_printf(char* dest, unsigned mem) {
         sprintf(dest, "INF");
 }
 
-unsigned get_processes_num(task_struct* p) {
+unsigned get_processes_num(task_struct *p) {
     unsigned n = 0;
     while (p) {
         ++n;
@@ -36,7 +36,8 @@ unsigned get_processes_num(task_struct* p) {
     }
     return n;
 }
-unsigned get_nearest_process_index(task_struct* p, pid_t pid) {
+
+unsigned get_nearest_process_index(task_struct *p, pid_t pid) {
     unsigned n = 0;
     while (p && p->pid <= pid) {
         ++n;
@@ -44,7 +45,8 @@ unsigned get_nearest_process_index(task_struct* p, pid_t pid) {
     }
     return n - 1;
 }
-pid_t get_pid_from_index(task_struct* p, unsigned ind) {
+
+pid_t get_pid_from_index(task_struct *p, unsigned ind) {
     while (p) {
         if (ind == 0)
             return p->pid;
@@ -52,4 +54,22 @@ pid_t get_pid_from_index(task_struct* p, unsigned ind) {
         p = p->next;
     }
     return 0;
+}
+
+void *find_mem(void *haystack, void *haystack_end, void *needle, void *needle_end) {
+    while (haystack < haystack_end) {
+        bool flag = true;
+        for (auto j = (unsigned long long) needle; j < (unsigned long long) needle_end; ++j) {
+            if (((unsigned long long) haystack) + (j - (unsigned long long) needle) >=
+                (unsigned long long) haystack_end ||
+                *((unsigned char *) (haystack) + (j - (unsigned long long) needle)) != *(unsigned char *)j) {
+                flag = false;
+                break;
+            }
+        }
+        if (flag)
+            return haystack;
+        haystack = (void *) (1 + (unsigned long long) haystack);
+    }
+    return haystack_end;
 }

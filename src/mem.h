@@ -15,7 +15,7 @@ struct vm_maps_data {
 };
 
 std::vector<vm_maps_data> get_vm_maps_data(pid_t pid);
-unsigned read_mem(pid_t, char*, void*, size_t);
-unsigned write_mem_byte(pid_t, char, void*);
+unsigned read_mem(pid_t, void*, void*, size_t);
+unsigned write_mem_byte(pid_t, void*, void*);
 
 #endif //MEMEDIT_MEM_H

@@ -27,13 +27,13 @@ std::vector<vm_maps_data> get_vm_maps_data(pid_t pid) {
     return result;
 }
 
-unsigned read_mem(pid_t pid, char* buffer, void* src, size_t size) {
+unsigned read_mem(pid_t pid, void* buffer, void* src, size_t size) {
     struct iovec local_iov{buffer, size};
     struct iovec remote_iov{src, size};
     return process_vm_readv(pid, &local_iov, 1, &remote_iov, 1, 0);
 }
 
-unsigned write_mem_byte(pid_t pid, char c, void* src) {
+unsigned write_mem_byte(pid_t pid, void* c, void* src) {
     struct iovec local_iov{&c, 1};
     struct iovec remote_iov{src, 1};
     return process_vm_writev(pid, &local_iov, 1, &remote_iov, 1, 0);

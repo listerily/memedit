@@ -181,16 +181,10 @@ display_col_file_path(int cols, int lines, int y, int x, int len, const std::vec
     }
 }
 
-void display_mem_screen(int cols, int lines, const char *mem, unsigned long long l, unsigned long long r,
-                        unsigned long long curr, int items, bool mode, char input) {
-    if (mode) {
-        display_centered_text(cols, 1, "Editing Memory");
-        display_centered_text(cols, 2, "Cancel Editing (Q)");
-    } else {
-        display_centered_text(cols, 1, "Viewing Memory");
-        display_centered_text(cols, 2,
-                              "Select (Enter)   Back (Q)   Up (Up)   Down (Down)   Left (Left)   Right (Right)");
-    }
+void display_mem_screen_viewing(int cols, int lines, const char *mem, unsigned long long l, unsigned long long r,
+                                unsigned long long curr, int items) {
+    display_centered_text(cols, 1, "Viewing Memory");
+    display_centered_text(cols, 2, "Select (Enter)   Back (Q)   Dump (D)   Search (S)");
     int address_x, hex_view_x, char_view_x;
     display_table_header(4, address_x = 0, "Address", 13);
     display_table_header(4, hex_view_x = 13, "Hex View", items * 3 + 1);
@@ -204,11 +198,96 @@ void display_mem_screen(int cols, int lines, const char *mem, unsigned long long
         if (curr >= addr && curr < addr + items) unset_color(COLOR_PAIR_REVERSE);
         for (int j = 0; j < items; ++j) {
             if (addr + j < r) {
-                if (mode && addr + j == curr) sprintf(temp, "%02X", (int) (input & 0xFF));
-                else sprintf(temp, "%02X", (int) (mem[addr - l + j] & 0xFF));
-                if (curr == addr + j) set_color(mode ? COLOR_PAIR_EDITING : COLOR_PAIR_REVERSE);
+                sprintf(temp, "%02X", (int) (mem[addr - l + j] & 0xFF));
+                if (curr == addr + j) set_color(COLOR_PAIR_REVERSE);
                 mvaddstr(5 + (int) i, hex_view_x + 3 * j, temp);
-                if (curr == addr + j) unset_color(mode ? COLOR_PAIR_EDITING : COLOR_PAIR_REVERSE);
+                if (curr == addr + j) unset_color(COLOR_PAIR_REVERSE);
+                if (mem[addr - l + j] >= 32 && mem[addr - l + j] < 127) {
+                    if (curr == addr + j) set_color( COLOR_PAIR_REVERSE);
+                    mvaddch(5 + (int) i, char_view_x + j, mem[addr - l + j]);
+                    if (curr == addr + j) unset_color( COLOR_PAIR_REVERSE);
+                } else if (mem[addr - l + j] == 0) {
+                    set_color(curr == addr + j ? COLOR_PAIR_UNKNOWN_CHAR_SELECTED : COLOR_PAIR_UNKNOWN_CHAR);
+                    mvaddch(5 + (int) i, char_view_x + j, '.');
+                    unset_color(curr == addr + j ? COLOR_PAIR_UNKNOWN_CHAR_SELECTED : COLOR_PAIR_UNKNOWN_CHAR);
+                } else {
+                    set_color(curr == addr + j ? COLOR_PAIR_UNKNOWN_CHAR_SELECTED : COLOR_PAIR_UNKNOWN_CHAR);
+                    mvaddch(5 + (int) i, char_view_x + j, '?');
+                    unset_color(curr == addr + j ? COLOR_PAIR_UNKNOWN_CHAR_SELECTED : COLOR_PAIR_UNKNOWN_CHAR);
+                }
+            }
+        }
+    }
+}
+
+void display_mem_screen_editing(int cols, int lines, const char *mem, unsigned long long l, unsigned long long r,
+                                unsigned long long curr, int items, unsigned char input) {
+    display_centered_text(cols, 1, "Editing Memory");
+    display_centered_text(cols, 2, "Cancel (Q)");
+    int address_x, hex_view_x, char_view_x;
+    display_table_header(4, address_x = 0, "Address", 13);
+    display_table_header(4, hex_view_x = 13, "Hex View", items * 3 + 1);
+    display_table_header(4, char_view_x = 13 + items * 3 + 1, "Char View", cols - (13 + items * 3));
+
+    char temp[128];
+    for (unsigned long long addr = l, i = 0; addr < r; addr += items, ++i) {
+        sprintf(temp, "%llx", addr);
+        if (curr >= addr && curr < addr + items) set_color(COLOR_PAIR_REVERSE);
+        mvaddstr(5 + (int) i, address_x, temp);
+        if (curr >= addr && curr < addr + items) unset_color(COLOR_PAIR_REVERSE);
+        for (int j = 0; j < items; ++j) {
+            if (addr + j < r) {
+                if (addr + j == curr) sprintf(temp, "%02X", (int) (input & 0xFF));
+                else sprintf(temp, "%02X", (int) (mem[addr - l + j] & 0xFF));
+                if (curr == addr + j) set_color(COLOR_PAIR_EDITING);
+                mvaddstr(5 + (int) i, hex_view_x + 3 * j, temp);
+                if (curr == addr + j) unset_color(COLOR_PAIR_EDITING);
+                if (mem[addr - l + j] >= 32 && mem[addr - l + j] < 127) {
+                    if (curr == addr + j) set_color( COLOR_PAIR_REVERSE);
+                    mvaddch(5 + (int) i, char_view_x + j, mem[addr - l + j]);
+                    if (curr == addr + j) unset_color( COLOR_PAIR_REVERSE);
+                } else if (mem[addr - l + j] == 0) {
+                    set_color(curr == addr + j ? COLOR_PAIR_UNKNOWN_CHAR_SELECTED : COLOR_PAIR_UNKNOWN_CHAR);
+                    mvaddch(5 + (int) i, char_view_x + j, '.');
+                    unset_color(curr == addr + j ? COLOR_PAIR_UNKNOWN_CHAR_SELECTED : COLOR_PAIR_UNKNOWN_CHAR);
+                } else {
+                    set_color(curr == addr + j ? COLOR_PAIR_UNKNOWN_CHAR_SELECTED : COLOR_PAIR_UNKNOWN_CHAR);
+                    mvaddch(5 + (int) i, char_view_x + j, '?');
+                    unset_color(curr == addr + j ? COLOR_PAIR_UNKNOWN_CHAR_SELECTED : COLOR_PAIR_UNKNOWN_CHAR);
+                }
+            }
+        }
+    }
+}
+
+void display_mem_screen_searching(int cols, int lines, const char *mem, unsigned long long l, unsigned long long r,
+                                  unsigned long long curr, int items, unsigned char *input, unsigned input_len, bool on,
+                                  bool search_end) {
+    char temp[256];
+    int temp_end = 0;
+    temp_end += sprintf(temp, search_end ? "No More Matching Results" : "Searching Memory: ");
+    for (unsigned i = 0; !search_end && i < input_len / 2; i++)
+        temp_end += sprintf(temp + temp_end, "%02X ", (int)(input[i]));
+
+    display_centered_text(cols, 1, temp);
+    display_centered_text(cols, 2, "Cancel (Esc)");
+
+    int address_x, hex_view_x, char_view_x;
+    display_table_header(4, address_x = 0, "Address", 13);
+    display_table_header(4, hex_view_x = 13, "Hex View", items * 3 + 1);
+    display_table_header(4, char_view_x = 13 + items * 3 + 1, "Char View", cols - (13 + items * 3));
+
+    for (unsigned long long addr = l, i = 0; addr < r; addr += items, ++i) {
+        sprintf(temp, "%llx", addr);
+        if (curr >= addr && curr < addr + items) set_color(COLOR_PAIR_REVERSE);
+        mvaddstr(5 + (int) i, address_x, temp);
+        if (curr >= addr && curr < addr + items) unset_color(COLOR_PAIR_REVERSE);
+        for (int j = 0; j < items; ++j) {
+            if (addr + j < r) {
+                sprintf(temp, "%02X", (int) (mem[addr - l + j] & 0xFF));
+                if (on && curr <= addr + j && addr + j < curr + input_len / 2) set_color(COLOR_PAIR_REVERSE);
+                mvaddstr(5 + (int) i, hex_view_x + 3 * j, temp);
+                if (on && curr <= addr + j && addr + j < curr + input_len / 2) unset_color(COLOR_PAIR_REVERSE);
                 if (mem[addr - l + j] >= 32 && mem[addr - l + j] < 127) {
                     if (curr == addr + j) set_color( COLOR_PAIR_REVERSE);
                     mvaddch(5 + (int) i, char_view_x + j, mem[addr - l + j]);
