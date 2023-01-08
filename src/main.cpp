@@ -1,5 +1,6 @@
 #include <cstdio>
 #include <curses.h>
+#include <cstdlib>
 #include "color.h"
 #include "routines.h"
 
