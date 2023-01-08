@@ -73,3 +73,8 @@ void *find_mem(void *haystack, void *haystack_end, void *needle, void *needle_en
     }
     return haystack_end;
 }
+void dump_mem(void* mem, unsigned long long size) {
+    FILE* file = fopen("./dumpfile", "wb");
+    fwrite(mem, 1, size, file);
+    fclose(file);
+}

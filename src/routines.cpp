@@ -149,6 +149,10 @@ void edit_memory_loop(pid_t pid, unsigned long long begin, unsigned long long en
                 memset(search_seq, 0, sizeof(search_seq));
                 search_input_idx = 0;
                 on_result = false;
+            } else if (ch == 'd' || ch == 'D') {
+                char *mem = new char[end - begin];
+                read_mem(pid, mem, (void *) begin, end - begin);
+                dump_mem(mem, end - begin);
             }
         } else if (mode == 2) {
             if (ch == 'q' || ch == 'Q' || ch == KEY_EXIT) {
