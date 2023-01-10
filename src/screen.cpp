@@ -270,7 +270,7 @@ void display_mem_screen_searching(int cols, int lines, const char *mem, unsigned
         temp_end += sprintf(temp + temp_end, "%02X ", (int)(input[i]));
 
     display_centered_text(cols, 1, temp);
-    display_centered_text(cols, 2, "Cancel (Esc)");
+    display_centered_text(cols, 2, "Cancel (Q)");
 
     int address_x, hex_view_x, char_view_x;
     display_table_header(4, address_x = 0, "Address", 13);

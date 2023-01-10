@@ -34,7 +34,7 @@ unsigned read_mem(pid_t pid, void* buffer, void* src, size_t size) {
 }
 
 unsigned write_mem_byte(pid_t pid, void* c, void* src) {
-    struct iovec local_iov{&c, 1};
+    struct iovec local_iov{c, 1};
     struct iovec remote_iov{src, 1};
     return process_vm_writev(pid, &local_iov, 1, &remote_iov, 1, 0);
 }
